@@ -1,9 +1,22 @@
 package main
 
 import (
-	"net/http"
+	"html/template"
+	"fmt"
+	"os"
 )
 
 func main() {
-	http.ListenAndServe(":8000", http.FileServer(http.Dir("public")))
+	templateString := `Lemondate Stand Supply`
+	t, err := template.New("title").Parse(templateString)
+
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	err = t.Execute(os.Stdout, nil)
+
+	if err != nil {
+		fmt.Println(err)
+	}
 }
