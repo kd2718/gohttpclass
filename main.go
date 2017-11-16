@@ -1,22 +1,40 @@
 package main
 
 import (
+	"net/http"
 	"html/template"
+	"log"
 	"fmt"
-	"os"
 )
 
 func main() {
-	templateString := `Lemondate Stand Supply`
-	t, err := template.New("title").Parse(templateString)
+	templates := populateTemplates()
 
-	if err != nil {
-		fmt.Println(err)
-	}
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request){
+		requestdFiles := r.URL.Path[1:]
 
-	err = t.Execute(os.Stdout, nil)
+		t := templates.Lookup(requestdFiles + ".html")
+		if t != nil {
+			err := t.Execute(w, nil)
+			if err != nil {
+				log.Println(err)
+			} else {
+				w.WriteHeader(http.StatusNotFound)
+			}
+		}
+	})
 
-	if err != nil {
-		fmt.Println(err)
-	}
+	http.Handle("/img/", http.FileServer(http.Dir("public")))
+	http.Handle("/css/", http.FileServer(http.Dir("public")))
+
+	fmt.Println("starting server")
+
+	http.ListenAndServe(":8000", nil)
+}
+
+func populateTemplates() *template.Template {
+	result := template.New("templates")
+	const basePath = "templates"
+	template.Must(result.ParseGlob(basePath + "/*.html"))
+	return result
 }
